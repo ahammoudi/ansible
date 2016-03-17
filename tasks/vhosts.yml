@@ -1,0 +1,29 @@
+- name: Create log directories
+  file:
+    path: "{{ item.log_directory }}"
+    state: directory
+    mode: 0755
+  with_items: httpd_vhosts
+
+- name: Create document root directories
+  file:
+    path: "{{ item.document_root }}"
+    state: directory
+    mode: 0755
+  when: item.create_document_root|default(false)
+  with_items: httpd_vhosts
+
+- name: Install vhosts configs
+  template: 
+    src: vhost.conf.j2
+    dest: /etc/httpd/vhost.d/{% if item.priority|default(false) %}{{ item.priority }}-{% endif %}{{ item.name }}.conf
+  notify: Reload httpd    
+  with_items: httpd_vhosts
+
+- name: Install logrotate config files for vhost
+  template: 
+    src: vhost.logrotate.conf.j2 
+    dest: "/etc/logrotate.d/httpd-vhost-{{ item.name }}"
+    #validate: /usr/sbin/logrotate -d %s  
+  with_items: httpd_vhosts
+

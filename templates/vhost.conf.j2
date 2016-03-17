@@ -1,0 +1,51 @@
+{% if httpd_interface_name != 'any' %}
+<VirtualHost {{ hostvars[inventory_hostname]['ansible_' + httpd_interface_name]['ipv4']['address'] }}:{{ httpd_port }}>
+{% else %}
+<VirtualHost *:{{ httpd_port }}>
+{% endif %}
+
+    ServerAdmin {{ item.admin_email|default('admin@' ~ item.hostname) }}
+    ServerName {{ item.hostname }}
+{% for alias in item.hostname_aliases|default([]) %}
+    ServerAlias {{ alias }}
+{% endfor %}
+
+{% if internal_hostname is defined %}
+    ServerAlias {{ internal_hostname }}
+{% endif %}
+
+    ErrorLog {{ item.log_directory }}/httpd.error.log
+    CustomLog {{ item.log_directory }}/httpd.access.log {% if httpd_extended_logging %}combined-extended{% else %}combined{% endif %}
+
+{% if item.document_root|default(false) %}
+    DocumentRoot {{ item.document_root }}
+{% endif %}
+{% if item.additional_config is defined %}
+    {{ item.additional_config  }}
+{% endif %}
+
+
+{% if item.document_root|default(false) %}
+    <Directory {{ item.document_root }}>
+        SetOutputFilter DEFLATE
+        Order Allow,Deny
+        Allow from all
+        AllowOverride all
+        Options FollowSymlinks
+
+{% if item.additional_directory_config is defined %}
+        {{ item.additional_directory_config }}
+{% endif %}
+    </Directory>
+{% endif %}
+
+    <IfModule mod_expires.c>
+        ExpiresActive On
+        ExpiresByType image/gif "access plus 1 months"
+        ExpiresByType image/jpg "access plus 1 months"
+        ExpiresByType image/jpeg "access plus 1 months"
+        ExpiresByType image/png "access plus 1 months"
+        ExpiresByType image/x-icon "access plus 1 months"
+        ExpiresByType image/ico "access plus 1 months"
+    </IfModule>
+</VirtualHost>

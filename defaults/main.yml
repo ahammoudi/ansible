@@ -1,0 +1,11 @@
+---
+httpd_port: 80
+httpd_interface_name: any
+httpd_start_servers: 8
+httpd_min_spare_servers: 5
+httpd_max_spare_servers: 20
+httpd_server_limit: 256
+httpd_max_clients: 256
+httpd_max_requests_per_child: 4000
+httpd_vhost_root_directory: /var/www
+httpd_extended_logging: true

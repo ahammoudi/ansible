@@ -1,0 +1,30 @@
+- name: Install apache httpd
+  yum: name=httpd state=present
+
+- include: mod-log-first-byte.yml
+  when: httpd_extended_logging
+
+- name: Create vhost config directory
+  file: 
+    path: /etc/httpd/vhost.d/
+    state: directory
+  tags: ['apache_config']
+
+- name: Create vhost root directory    
+  file: 
+    path: "{{ httpd_vhost_root_directory }}"
+    state: directory
+    mode: 0755
+
+- include: vhosts.yml
+  tags: ['vhosts', 'apache_config']
+
+- name: Install apache httpd config
+  template: src=httpd.conf.j2 dest=/etc/httpd/conf/httpd.conf validate="apachectl -t -f %s"
+  notify: Reload httpd
+  tags: ['apache_config']
+
+- name: Start and enable apache httpd
+  service: name=httpd state=started enabled=yes
+
+

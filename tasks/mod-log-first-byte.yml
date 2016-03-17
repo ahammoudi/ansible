@@ -1,0 +1,24 @@
+---
+- name: Install mod-log-first-byte depends
+  yum: name={{ item }} state=present
+  with_items:
+    - httpd-devel
+    - gcc
+
+- name: Create mod-log-first-byte data dir
+  file:
+    dest: /root/apache-modules-build
+    state: directory
+
+- name: Copy mod-log-first-byte source
+  copy:
+    src: mod_log_firstbyte.c
+    dest: /root/apache-modules-build/mod_log_firstbyte.c
+
+- name: Compile mod-log-first-byte
+  shell: apxs -i -a -c /root/apache-modules-build/mod_log_firstbyte.c
+  args:
+    creates: /usr/lib64/httpd/modules/mod_log_firstbyte.so
+  notify: Reload httpd
+
+
